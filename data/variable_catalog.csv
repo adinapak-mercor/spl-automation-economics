@@ -1,0 +1,35 @@
+variable,layer,meaning,grain,status,current_or_candidate_source,derived_from,primary_use,key_caveat
+rollout_assignment,assignment,Randomized Studio or Monk access,pod/project x rollout wave,missing,Experiment assignment system,,ITT and IV instrument,Must be frozen before outcomes
+rollout_start_at,assignment,Date assigned access begins,pod/project x rollout wave,missing,Experiment assignment system,,Treatment timing,Separate assignment from realized access
+tool_calls,usage,Total agent tool-call events,event and user-day,available,ClickHouse or Snowflake telemetry,,Adoption diagnostic,Raw counts are not productivity
+dau,usage,Daily active agent users,user-day,available,User-level telemetry,,Adoption diagnostic,Composition-sensitive
+weekly_calls,usage,Calls per user per week,user-week,available,Tool-call telemetry,tool_calls per active user,Adoption intensity,Heavy users can dominate averages
+tool_breadth,usage,Distinct tools used,user-week,available,Tool-call telemetry,count distinct tool_name,Adoption breadth,More breadth is not necessarily better
+failure_rate,reliability,Failed calls divided by total calls,surface x week,available,Tool-call telemetry,failed_calls / total_calls,Guardrail and proxy validation,Failure definitions must be stable
+hex_automation_rate,automation,Automated events divided by automated plus manual comparator events,surface/pod x week,under_revision,Hex automation methodology,automated_events / eligible_events,MVP exposure proxy,Surface event units are not comparable
+automation_by_app,automation,Automation proxy by Slack Google Snowflake and other surfaces,surface x week,available,Tool and app telemetry,hex_automation_rate by surface,Proxy audit,Definitions differ by surface
+sub_department,identity,Organizational grouping,person x effective interval,available,User/org mapping,,Heterogeneity and routing,Not a substitute for pod
+pod_id,identity,Stable operating pod identifier,person/project x effective interval,missing,RE mapping TBD,,Required join key,Must be effective-dated
+project_id,identity,Stable project or account identifier,project,partial,Project metadata,,Randomization or finance join,Project-to-pod changes must be retained
+workflow_id,workflow,Mutually exclusive SPL job-to-be-done,workflow occurrence,missing,SPL JTBD sheet,,Ideal exposure and mechanism,Taxonomy must prevent double counting
+eligible_workflow,workflow,Whether a workflow is in the automation opportunity set,workflow,missing,SPL JTBD governance,,Ideal automation denominator,Define before observing effects
+workflow_volume,workflow,Number of completed workflow occurrences,pod x workflow x week,missing,Project or task systems,,Time-weighted automation and demand,Requires completion definition
+baseline_manual_minutes,workflow,Pre-treatment manual minutes per occurrence,workflow,missing,Survey or time study,,Fixed workflow weight,Do not use post-treatment time as weight
+labor_displacement_share,workflow,Fraction of baseline human minutes displaced,pod x workflow x week,missing,Task audit or telemetry,1 minus observed human minutes / baseline minutes,Ideal automation numerator,AI involvement is not the same as displacement
+spl_minutes,mechanism,Human attention including rework,pod x workflow x week,missing,Time records or telemetry,,Attention per workflow,Measurement burden and Hawthorne effects
+spl_hours,labor,SPL labor assigned to each pod,pod x week,missing,Staffing allocation or time records,,FTE construction,Realized labor may be post-treatment
+spl_fte,labor,Full-time-equivalent SPL allocation,pod x week,derived,Staffing allocation or time records,sum allocation shares or hours / standard hours,Primary denominator,Avoid counting one person once per pod
+recognized_revenue,economics,Revenue recognized for the pod and period,pod x week,missing,Finance or project data,,Economic numerator,Recognition timing must match costs
+non_spl_variable_cost,economics,Expert and delivery cost excluding SPL labor,pod x week,missing,Finance or project data,,Contribution output,Cost boundary must be explicit
+contribution_output,economics,Revenue less non-SPL variable delivery cost,pod x week,derived,Finance data,recognized_revenue - non_spl_variable_cost,Primary numerator,Do not double-count SPL labor
+spl_leverage,economics,Contribution output supported per SPL FTE,pod x week,derived,Finance plus staffing,contribution_output / spl_fte,Primary business outcome,Undefined when FTE is zero
+project_maturity,control,Ramp stage or project age,pod/project x week,missing,Project metadata,,Prespecified control or heterogeneity,May interact with treatment
+project_type,control,Stable work or contract category,project,missing,Project metadata,,Stratification and heterogeneity,Avoid post-treatment reclassification
+demand_volume,context,Amount of requested work,pod x week,missing,Project or task systems,,Interpretation and mechanism,Served demand can be treatment-mediated
+one_shot_acceptance,quality,Share accepted without rework,pod x week,partial,Operational systems,accepted_once / completed_units,Primary candidate guardrail,Preserve numerator and denominator
+rework_rate,quality,Share requiring additional work,pod x week,partial,Operational systems,reworked_units / completed_units,Guardrail,Definition must be stable
+delivery_yield,quality,Share of requested units delivered,pod x week,partial,Delivery system,delivered_units / requested_units,Guardrail and capacity,Requested volume must be defined
+qc_score,quality,Quality-control evaluation,pod x week,partial,QC system,,Guardrail,Reviewer mix can change
+sla_attainment,quality,Share delivered within SLA,pod x week,partial,Delivery system,on_time_units / eligible_units,Guardrail,Exclude paused or invalid cases consistently
+expert_nps,experience,Weekly expert satisfaction outcome,pod x week,available,Weekly expert survey,,Secondary guardrail,Low power and response composition
+time_use_survey,mechanism,Self-reported time allocation,person-week,available_but_uncertain,Weekly time-use survey,,Proxy validation,Recall and response bias
