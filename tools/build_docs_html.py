@@ -115,15 +115,19 @@ def convert(md: str) -> str:
                 rows.append(split_row(lines[i].strip()))
                 i += 1
             t = ["<table>", "<thead><tr>"]
+            # Emit an alignment style only where it differs from the default,
+            # to keep the file small enough to upload in one piece.
             for n, cell in enumerate(header):
                 a = aligns[n] if n < len(aligns) else "left"
-                t.append(f'<th style="text-align:{a}">{inline(cell)}</th>')
+                sty = ' style="text-align:right"' if a == "right" else ""
+                t.append(f"<th{sty}>{inline(cell)}</th>")
             t.append("</tr></thead><tbody>")
             for row in rows:
                 t.append("<tr>")
                 for n, cell in enumerate(row):
                     a = aligns[n] if n < len(aligns) else "left"
-                    t.append(f'<td style="text-align:{a}">{inline(cell)}</td>')
+                    sty = ' style="text-align:right"' if a == "right" else ""
+                    t.append(f"<td{sty}>{inline(cell)}</td>")
                 t.append("</tr>")
             t.append("</tbody></table>")
             out.append("".join(t))
