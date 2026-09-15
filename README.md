@@ -155,6 +155,30 @@ Use a randomized or staggered rollout by pod/project and join:
 
 This avoids blocking the first study on workflow-level time telemetry. Add workflow labeling and attention measurement only after establishing feasibility and signal.
 
+## Collated version for Google Docs
+
+The whole design is collated into one document at
+[`docs/collated-document.md`](docs/collated-document.md), deduplicated and renumbered so it
+reads as a single paper rather than a folder of notes. The presentation outline and the
+copy-ready equation list are folded into it and are not maintained separately.
+
+To get it into Google Docs with tables and equations intact:
+
+```
+python3 tools/build_docs_html.py docs/collated-document.md dist/spl-automation-economics.html
+```
+
+1. Open `dist/spl-automation-economics.html` in a browser.
+2. Select all, copy, and paste into an empty Google Doc. Pasting HTML preserves headings,
+   bold, monospace and real tables; pasting Markdown does not.
+3. Run **Extensions → Auto-LaTeX Equations → Render Equations**. All 47 equations are
+   emitted as literal double-dollar-delimited LaTeX for the add-on to pick up, and the
+   build asserts that no unpaired delimiter appears anywhere in the prose.
+
+The build joins each equation onto a single line, because the add-on matches delimiters
+within one paragraph, and converts spelled-out Greek in inline symbol references to real
+Greek characters so `tau_H` reads as a symbol rather than as a word.
+
 ## Repository map
 
 - [`docs/formula-map.md`](docs/formula-map.md) — central metric dependency table, formula derivations, units, and estimands.
