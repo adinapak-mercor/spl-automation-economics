@@ -11,9 +11,15 @@ Estimate whether an intervention that increases SPL automation causes:
 
 ## Unit of randomization
 
-Prefer pod or project/account clusters over individual SPLs.
+The unit is decided by one empirical fact: how many SPLs share a project. Individual
+randomization is vulnerable to interference because SPLs can share prompts, scheduled
+agents, templates and practices, and team leads can spread treatment to nominal controls —
+but that interference only exists where a project holds more than one SPL. Where projects
+have a single lead, individual randomization already is cluster randomization and is
+strictly more powerful.
 
-Individual randomization is vulnerable to interference because SPLs can share prompts, scheduled agents, templates and practices. Team leads can also spread treatment to nominal controls.
+Compute the SPL-per-project distribution before choosing. The decision table and the
+access-gating design are in [`rollout-mechanics.md`](rollout-mechanics.md).
 
 Recommended approach:
 
@@ -146,7 +152,11 @@ Before launch, require only:
 5. one viable economic/operational outcome;
 6. one quality guardrail.
 
-Workflow taxonomy, manual-minute weights and richer telemetry can be constructed later only if raw events and join keys are retained. New survey questions or screen/app-time measurement must be set up before treatment if they are needed for baseline comparison.
+Workflow taxonomy can be constructed later; manual-minute weights cannot, because a weight
+measured after treatment is endogenous to it. New survey questions and app-time measurement
+must be in field before treatment if they are needed for baseline comparison. The full
+split between what is reconstructable, what needs capturing now, and what blocks launch is
+in [`reconstructability.md`](reconstructability.md).
 
 ## Main threats
 
@@ -164,6 +174,9 @@ Workflow taxonomy, manual-minute weights and richer telemetry can be constructed
 | Outcome lag | Revenue does not react immediately | Mechanism outcomes plus event-study horizon |
 | Multiple testing | Selective positive findings | Prespecify primary outcome and guardrails |
 | Low power | Noisy pod metrics hide effects | Power analysis using pre-period variance |
+| Revenue insensitive to SPL effort | Primary economic outcome cannot respond within the study window, so a null reflects pricing rather than productivity | Classify eligible pods by pricing model; lead with an effort-responsive operational primary and treat contribution per FTE as confirmatory |
+| Few randomized units | Cluster-robust standard errors over-reject and results look more significant than they are | Randomization inference as the primary test; stratify for balance |
+| Shared access credential | Assignment and realized access diverge unobservably; borrowed access is indistinguishable from non-adoption | Identity-based gating with access logging; assignment frozen independently of the gate |
 
 ## Decision rule
 
