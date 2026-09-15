@@ -1,0 +1,7 @@
+surface,period_start_utc,period_end_utc,numerator,denominator,reported_share_percent,history_days_loaded,history_days_selected,canonical_unit,source_note
+Snowflake,2026-09-04,2026-09-10,1087475,1270690,85.6,89,90,eligible native query record,Panther native query history; numerator uses mcp source tag
+Google Sheets,2026-09-04,2026-09-10,18212,65437,27.8,28,90,user/account x five-minute UTC window,Successful allowlisted ClickHouse writes over union with Panther native Drive spreadsheet edits
+Google Docs,2026-09-04,2026-09-10,1456,28811,5.1,28,90,user/account x five-minute UTC window,Successful docs.documents.batchUpdate over union with Panther native Drive document edits
+Slack,2026-09-03,2026-09-09,142768,507419,28.1,90,90,posted message,Selected status-ok MCP and executed queue sends over total compatible posted messages; scheduling excluded
+Team Platform,2026-09-04,2026-09-10,4155,7173,57.9,90,90,actor x five-minute UTC window,Automated agent or external queue-marker windows over nondeleted JobEvent actor-windows
+Studio v1,2026-09-07,2026-09-13,15640,155645,10.0,89,90,native Studio account x five-minute UTC window,Coil Okta OAuth windows over all native authentication windows

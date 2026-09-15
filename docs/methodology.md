@@ -12,22 +12,43 @@
 - `P`: SPL economic leverage
 - `Q`: quality or delivery guardrail
 
-## 1. Automation exposure
+## 1. Automation and adoption exposure
 
-### Minimum viable Hex proxy
+### Hex provides a vector, not one automation rate
+
+For each surface `s`:
 
 ```math
-A^{Hex}_{pt}
-=
-\frac{\mathrm{AutomatedEvents}_{pt}}
-{\mathrm{AutomatedEvents}_{pt}+\mathrm{ManualEvents}_{pt}}
+A^s_{pt}=\frac{N^s_{pt}}{D^s_{pt}}
 ```
 
-This is inexpensive because the underlying events already exist. It is a proxy, not the target construct: different surfaces emit different numbers of events for comparable user goals, and an automated event does not necessarily imply meaningful labor displacement.
+The September 2026 Hex snapshot defines six different units:
 
-Use this measure only after the current backfill and surface-weighting work is complete. Report surface-specific rates alongside any overall rate.
+| Surface | `N_s` | `D_s` | Unit |
+|---|---|---|---|
+| Snowflake | eligible query with `mcp` source tag | eligible native query | query record |
+| Sheets | window with qualifying Coil Sheets write | union of Coil and native spreadsheet-edit windows | user/account × five-minute UTC window |
+| Docs | window with qualifying Coil batch update | union of Coil and native document-edit windows | user/account × five-minute UTC window |
+| Slack | qualifying deduplicated Coil sends | Coil sends plus compatible native/non-Coil messages | posted message |
+| Team Platform | JobEvent window with automated/agent/external queue marker | nondeleted JobEvent actor-windows | actor × five-minute UTC window |
+| Studio | native-auth window with Coil OAuth client ID | any native-auth account-window | account × five-minute UTC window |
 
-### Ideal workflow-weighted measure
+The numerators are subsets of their own denominators, so every `A_s` is a valid within-surface share. The denominators cannot be summed across surfaces because their dimensions and source populations differ. Exact definitions are in [`hex-metric-specification.md`](hex-metric-specification.md).
+
+Use `A_s` as separate adoption/compliance outcomes. If one summary is necessary, use a pre-treatment standardized index:
+
+```math
+\widetilde A^s_{pt}=\frac{A^s_{pt}-\mu^s_0}{\sigma^s_0}
+```
+
+```math
+U_{pt}=\frac{1}{|\mathcal S^0_p|}
+\sum_{s\in\mathcal S^0_p}\widetilde A^s_{pt}
+```
+
+`U` is measured in baseline standard deviations and should be labeled “multi-surface adoption index.” It is not a percentage of work automated. A 10-percentage-point effect is not defined for `U`.
+
+### Ideal workflow-time measure
 
 ```math
 A_{pt}
@@ -71,6 +92,8 @@ The construction is valid only when:
 4. Eligibility is defined before observing treatment outcomes.
 5. `S` represents labor displaced, not simply AI involvement.
 
+This workflow-time measure is the first cross-surface measure for which “share of eligible SPL work automated” is dimensionally defensible. Both numerator and denominator are minutes.
+
 ## 2. SPL labor input
 
 ### Allocation-share construction
@@ -103,7 +126,7 @@ Use allocation shares if reliable time records do not exist. Use hours for workf
 ## 3. Economic output
 
 ```math
-GP_{pt}=R_{pt}-C_{pt}
+Y_{pt}=R_{pt}-C_{pt}
 ```
 
 - `R_pt` is revenue recognized for the pod and period.
@@ -124,7 +147,7 @@ All revenue and costs must use the same:
 ```math
 P_{pt}
 =
-\frac{GP_{pt}}
+\frac{Y_{pt}}
 {\mathrm{SPL\ FTE}_{pt}}
 ```
 
@@ -132,6 +155,23 @@ This measures economic value supported by one full-time-equivalent SPL. It captu
 
 - more output with the same SPL resources;
 - the same output with fewer SPL resources.
+
+It is a descriptive KPI with an embedded production assumption:
+
+```math
+\ln(P_{pt})=\ln(Y_{pt})-\ln(\mathrm{SPL\ FTE}_{pt})
+```
+
+The log ratio implicitly fixes the elasticity of output with respect to SPL labor at one. Report a robustness model that estimates that elasticity:
+
+```math
+\ln(Y_{pt})
+=
+\alpha_p+\lambda_t+\tau Z_{pt}
++\gamma\ln(\mathrm{SPL\ FTE}_{pt})+\delta'X_{pt}+\varepsilon_{pt}
+```
+
+If rollout changes staffing, realized SPL FTE is a post-treatment mechanism. The ratio estimates total operational leverage; the production model estimates conditional output. They should be labeled separately rather than treated as interchangeable.
 
 Fallbacks, in descending order of preference:
 
@@ -147,7 +187,7 @@ Revenue per SPL is easier to construct but ignores delivery cost. Projects per S
 
 ## 5. Why use a logarithm
 
-The main outcome model is:
+For a credible 0-to-1 automation share, the secondary automation model is:
 
 ```math
 \ln(P_{pt})
@@ -179,6 +219,20 @@ For small effects, the approximation is:
 
 Do not use `ln(P)` when `P <= 0`. Prespecify a levels model or a suitable alternative transformation rather than silently dropping non-positive pods.
 
+The primary randomized estimate does not require an automation percentage:
+
+```math
+\ln(P_{pt})
+=
+\alpha_p+\lambda_t+\tau Z_{pt}+\delta'X_{pt}+\varepsilon_{pt}
+```
+
+```math
+\mathrm{RolloutLift}=100\left(e^\tau-1\right)\%
+```
+
+This is preferable with the current Hex data because `Z` has a common definition while the six `A_s` measures do not have a common unit.
+
 ## 6. Human-attention mechanism
 
 ```math
@@ -193,10 +247,10 @@ This measures the scarce input automation is intended to reduce. Include rework 
 ```math
 \ln(H_{pwt})
 =
-\alpha_{pw}+\lambda_t+\beta_HA_{pwt}+\delta'X_{pwt}+\varepsilon_{pwt}
+\alpha_{pw}+\lambda_t+\tau_HZ_{pt}+\delta'X_{pwt}+\varepsilon_{pwt}
 ```
 
-Successful labor-saving automation implies `beta_H < 0`.
+Successful labor-saving rollout implies `tau_H < 0`. A rollout-instrumented workflow-time automation specification is a secondary mechanism estimate.
 
 ## 7. Structural production model
 
@@ -211,7 +265,7 @@ This estimates whether automation raises output while holding SPL labor fixed. I
 
 Important distinction:
 
-- `GP / SPL FTE` measures the combined business effect of more output and/or less labor.
+- `Y / SPL FTE` measures the combined business effect of more output and/or less labor.
 - The production function estimates output augmentation conditional on a specified labor input.
 - Controlling for realized post-treatment labor can block part of the labor-saving effect. Use it only when that conditional estimand is intentional.
 
@@ -222,7 +276,7 @@ For each guardrail:
 ```math
 g\!\left(E[Q_{pt}]\right)
 =
-\alpha_p+\lambda_t+\beta_QA_{pt}+\delta'X_{pt}
+\alpha_p+\lambda_t+\tau_QZ_{pt}+\delta'X_{pt}
 ```
 
 Choose link function `g` by outcome:
@@ -246,6 +300,15 @@ Do not average unlike guardrails into an unexplained composite score.
 
 Avoid controlling for variables caused by treatment when estimating the total treatment effect. SPL hours, staffing changes, workflow volume and demand served may be mechanisms rather than confounders.
 
-## 10. Main reported metric
+## 10. Main reported metrics
 
-> **Automation-driven SPL productivity lift:** the causal percentage change in gross profit supported per SPL FTE resulting from a 10-percentage-point increase in automation coverage, with quality and delivery reported as separate guardrails.
+Primary:
+
+> **Rollout-driven SPL productivity lift:** the causal percentage change in contribution supported per SPL FTE caused by assigned access, with quality and delivery reported separately.
+
+Supporting:
+
+- the rollout-induced change in each of the six Hex surface rates;
+- the rollout-induced change in a clearly labeled standardized adoption index;
+- the change in rework-inclusive SPL minutes per completed workflow;
+- a 10-percentage-point automation effect only after a credible 0-to-1 workflow-time or prespecified surface share exists.

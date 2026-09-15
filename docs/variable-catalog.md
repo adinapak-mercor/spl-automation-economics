@@ -17,8 +17,16 @@
 | `weekly_calls` | Calls per user per week | Adoption diagnostic | Derived | Tool-call telemetry | User-week | Usage intensity; affected by surface event volume |
 | `tool_breadth` | Distinct tools used | Adoption diagnostic | Derived | Tool-call telemetry | User-week | Breadth of use, not automation |
 | `failure_rate` | Failed calls divided by attempted calls | Reliability guardrail | Derived | Tool-call telemetry | Surface-week | Technical success, not task success |
-| `A^Hex` | Automated events divided by automated plus manual events | Automation exposure | Proxy; under revision | Hex automation methodology | App/group-week | Event-count weighting differs across surfaces and can undercount individual surfaces |
-| `automation_by_app` | Automation rate for Slack, Google, Snowflake, etc. | Heterogeneity | Derived; under revision | Tool-call and app-event telemetry | App-week | Single-surface behavior; not a unified workflow measure |
+| `N^SF`, `D^SF`, `A^SF` | MCP-tagged eligible queries, all eligible native queries, and their ratio | Surface adoption | Measured/derived | Panther native query history; `mcp` source tag | Query; pod/group-week | Query-type and eligible-account pruning must be versioned |
+| `N^Sheets`, `D^Sheets`, `A^Sheets` | Coil Sheets windows, union of Coil/native spreadsheet windows, and ratio | Surface adoption | Measured/derived | ClickHouse allowlisted writes; Panther Drive spreadsheet edits | User/account × 5-minute UTC window | Union/sessionization reconciles sampling rates but does not measure labor saved |
+| `N^Docs`, `D^Docs`, `A^Docs` | Coil Docs windows, union of Coil/native document windows, and ratio | Surface adoption | Measured/derived | Successful `docs.documents.batchUpdate`; Panther Drive document edits | User/account × 5-minute UTC window | Only 28/90 snapshot history days were loaded |
+| `C^Slack`, `N^Slack`, `A^Slack` | Qualifying Coil sends, native/non-Coil messages, and `C/(C+N)` | Surface adoption | Measured/derived | Slack member analytics and Snowflake MCP/queue send data | Posted message; pod/group-week | Request/queue dedup; scheduling excluded |
+| `N^TP`, `D^TP`, `A^TP` | Automated-origin JobEvent windows, all JobEvent actor-windows, and ratio | Surface adoption | Measured/derived | Aurora JobEvents/ActionsQueue via Fivetran/Snowflake | Actor × 5-minute UTC window | Sessionization avoids weighting one task by emitted event count |
+| `N^Studio`, `D^Studio`, `A^Studio` | Coil-OAuth native auth windows, all native auth windows, and ratio | Surface adoption | Measured/derived | Datadog auth logs plus saved native-account cohort | Account × 5-minute UTC window | Includes reads, polling, setup, and later-failed requests |
+| `U_pt` | Mean pre-treatment-standardized rate across a frozen relevant surface set | Compliance summary | Derived/proposed | Six surface rates | Pod-week | Baseline-SD index, not percent of work automated |
+| `surface_coverage` | Loaded days divided by selected days | Data validity | Derived | Snapshot load calendar | Surface-period | Missing days are gaps, not zeros |
+| `surface_active_user` | Positive surface numerator on at least 4 distinct loaded UTC days in saved week | Adoption breadth | Derived | Surface numerator plus employee roster | Person-surface-week | Cannot qualify on missing days |
+| `surface_breadth` | Qualifying active users divided by full-time salaried roster | Adoption breadth | Derived | Surface activity plus roster | Group-surface-week | Snapshot uses 2026-09-10 labels for historical activity |
 | `sub_department` | Organizational grouping | Join/control | Measured | User/org mapping | User-date | Current grouping is broader than pod |
 | `pod_id` | Stable user/SPL-to-pod mapping | Required join key | Proposed/incomplete | Rex mapping work; project/org data | User-date | Pods and project assignments change over time |
 | `workflow_id` | Mutually exclusive SPL task/workflow | Measurement unit | Proposed | SPL JTBD workbook and workflow classification | Workflow occurrence | Current telemetry is not consistently classified into workflows |
@@ -32,8 +40,8 @@
 | `FTE_pt` | SPL full-time equivalents assigned to pod | Denominator | Derived | SPL hours or allocation shares | Pod-week | Headcount without allocation overcounts shared SPLs |
 | `R_pt` | Revenue attributable to pod | Economic input | Proposed join | Finance/project data | Pod-week/month | Must align recognition period and project ownership |
 | `C_pt` | Non-SPL variable delivery costs | Economic input | Proposed join | Finance/project data | Pod-week/month | Cost boundaries must be documented and stable |
-| `GP_pt` | Revenue minus non-SPL variable delivery costs | Economic output | Derived | `R_pt - C_pt` | Pod-week/month | Not net income; exact cost definition matters |
-| `P_pt` | Gross profit supported per SPL FTE | Primary outcome | Derived | Finance plus staffing | Pod-week/month | Coarse; does not identify the workflow mechanism |
+| `Y_pt` | Revenue minus non-SPL variable delivery costs | Contribution output | Derived | `R_pt - C_pt` | Pod-week/month | Not official gross profit unless Finance's boundary matches |
+| `P_pt` | Contribution output supported per SPL FTE | Primary outcome | Derived | Finance plus staffing | Pod-week/month | Coarse; does not identify the workflow mechanism |
 | `H_pwt` | SPL minutes per completed workflow unit | Mechanism outcome | Proposed | Time survey/telemetry plus workflow counts | Pod-workflow-week | Requires comparable output-unit definitions |
 | `project_maturity` | Ramp or steady-state stage | Stratifier/control | Proposed join | Project metadata | Project-week | Treatment effects may differ sharply during ramp |
 | `project_type` | Work/project category | Stratifier/control | Proposed join | Project metadata | Project | Must be known before treatment |
@@ -62,7 +70,7 @@ A current-state org chart is insufficient for reconstructing past pod membership
 
 ## Source hierarchy
 
-1. **Existing telemetry:** tool calls, users, app/surface, failure state and current automation classifications.
+1. **Existing telemetry:** six separate surface metrics with distinct query/message/window definitions; tool calls, users and failure state.
 2. **Existing surveys/operations:** SPL time-use survey, expert NPS, task quality, AHT, delivery and rework.
 3. **New joins:** stable pod/project mapping, staffing allocation and finance outcomes.
 4. **New measurement:** workflow classification, baseline manual minutes and fraction of labor displaced.
@@ -71,3 +79,7 @@ A current-state org chart is insufficient for reconstructing past pod membership
 ## Data preservation requirement
 
 Retain raw, timestamped event data and versioned mappings even if the final workflow taxonomy is not ready before rollout. Historical reconstruction is possible only when raw events, stable IDs, classification versions and effective dates are preserved.
+
+## Hex snapshot caveat
+
+The September 2026 saved snapshot explicitly states that units differ and there is no combined rate. Use [`hex-metric-specification.md`](hex-metric-specification.md) as the source for exact surface numerators, denominators, snapshot periods, history coverage, active-user logic, and definition differences from the original Hex.

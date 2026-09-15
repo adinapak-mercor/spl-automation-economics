@@ -4,9 +4,9 @@
 
 Estimate whether an intervention that increases SPL automation causes:
 
-1. higher automation coverage;
+1. higher Coil involvement on the prespecified Hex surfaces;
 2. lower human attention per workflow;
-3. higher gross profit supported per SPL;
+3. higher contribution output supported per SPL;
 4. no deterioration in quality, delivery or expert experience.
 
 ## Unit of randomization
@@ -47,15 +47,31 @@ Do not define treatment solely as observed usage. High-performing pods may self-
 
 `tau` estimates the effect of being assigned the rollout, regardless of adoption.
 
-### First stage
+### Surface-specific first stages
 
 ```math
-A_{pt}
+A^s_{pt}
 =
-\alpha_p+\lambda_t+\pi Z_{pt}+\theta'X_{pt}+\nu_{pt}
+\alpha^s_p+\lambda^s_t+\pi_s Z_{pt}+\theta_s'X_{pt}+\nu^s_{pt}
 ```
 
-`pi` tests whether rollout assignment actually increases automation coverage.
+`pi_s` tests whether rollout assignment changes Coil involvement on surface `s`. Snowflake queries, Slack messages, and five-minute windows on the other surfaces are not pooled.
+
+If one summary first stage is prespecified, use a baseline-standardized adoption index:
+
+```math
+U_{pt}=\frac{1}{|\mathcal S^0_p|}
+\sum_{s\in\mathcal S^0_p}
+\frac{A^s_{pt}-\mu^s_0}{\sigma^s_0}
+```
+
+```math
+U_{pt}
+=
+\alpha_p+\lambda_t+\pi_U Z_{pt}+\theta'X_{pt}+\nu_{pt}
+```
+
+`U` is a multi-surface adoption index in baseline standard deviations, not percent of work automated.
 
 ### Rollout-instrumented effect
 
@@ -65,7 +81,7 @@ A_{pt}
 \alpha_p+\lambda_t+\beta\widehat{A}_{pt}+\delta'X_{pt}+\varepsilon_{pt}
 ```
 
-`beta` is the local average treatment effect among pods whose automation responds to assignment, under the standard relevance, exclusion, independence and monotonicity assumptions.
+`beta` is the local average treatment effect among pods whose selected exposure responds to assignment, under the standard relevance, exclusion, independence and monotonicity assumptions. Run this only for a prespecified scalar exposure with a defensible meaning: a primary surface, the clearly labeled index `U`, or the later workflow-time automation share. A “10pp” interpretation is invalid for `U`.
 
 ### Mechanism
 
@@ -95,7 +111,7 @@ Use pre-treatment coefficients to examine parallel trends. Post-treatment coeffi
 
 ### Primary
 
-- Gross profit before SPL labor cost per SPL FTE.
+- Contribution output before SPL labor cost per SPL FTE.
 
 ### Mechanism
 
@@ -139,7 +155,10 @@ Workflow taxonomy, manual-minute weights and richer telemetry can be constructed
 | Spillovers | Controls receive treatment indirectly | Cluster randomization; track sharing |
 | Adoption selection | Strong pods both adopt and perform better | Use assigned rollout, not usage alone |
 | Changing pod membership | Misattributes events and outcomes | Effective-dated mappings |
-| Event-count measurement error | Attenuates or distorts automation effect | Surface-specific validation; workflow/time subsample |
+| Incommensurate surface units | A combined rate is dominated by arbitrary query/message/window volume | Separate first stages; optional standardized index; no summed rate |
+| Surface measurement error | Attenuates or distorts automation effect | Versioned definitions; surface validation; workflow/time subsample |
+| Snapshot coverage gaps | Missing days are mistaken for zero usage | Coverage flags; common loaded-day windows; do not impute zero |
+| Current roster applied historically | Reorganizations misclassify past departments | Effective-dated pod/person mapping for analysis |
 | Anticipation | Pods change before assigned date | Conceal timing where practical; inspect leads |
 | Attrition/reorganizations | Composition changes after treatment | Preserve assignment; report balance/attrition |
 | Outcome lag | Revenue does not react immediately | Mechanism outcomes plus event-study horizon |
@@ -150,7 +169,7 @@ Workflow taxonomy, manual-minute weights and richer telemetry can be constructed
 
 Do not commit to a full workflow telemetry build before confirming:
 
-- the rollout moves the existing automation proxy;
+- the rollout moves at least one prespecified surface metric or the adoption index;
 - pod mapping and SPL denominators are sufficiently reliable;
 - a plausible primary outcome has adequate variation and power;
 - the result would change a product or deployment decision.

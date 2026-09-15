@@ -1,125 +1,210 @@
-# Presentation scaffold: one system, two audiences
+# Presentation scaffold: formula-first specification
 
-Recommended format: keep this repository as the source of truth and present a short Notion or Google Doc that links here. The repo preserves versioned formulas, lineage, and implementation details; the presentation should explain the system in one pass.
+Use the GitHub README as the entry point and [`formula-map.md`](formula-map.md) as the presentation. The most useful shared artifact for economists and engineers is a compact formula sheet with source lineage—not a high-level process diagram.
 
-## The one-sentence proposal
+## Panel 1 — What is actually observed today?
 
-> Measure the causal percentage change in quality-adjusted pod contribution supported per SPL FTE from randomized access to automation, then use workflow-level human attention to explain the mechanism.
-
-## Suggested one-page flow
-
-### 1. Start with the decision, not the dashboard
-
-**Decision:** Should we invest in and scale SPL automation?
-
-**Evidence needed:** Does access to the product increase economic leverage, through less human attention, without damaging quality?
-
-### 2. Show the causal chain
-
-```text
-randomized access → realized automation → less SPL attention per unit
-                                      ↘ more contribution per SPL
-                         quality / delivery must not worsen
+```math
+A^s_{pt}=\frac{N^s_{pt}}{D^s_{pt}}
 ```
 
-This separates five ideas that are easy to conflate:
+| Surface `s` | Numerator `N_s` | Denominator `D_s` | Unit |
+|---|---|---|---|
+| Snowflake | MCP-tagged eligible queries | eligible native queries | query |
+| Sheets | qualifying Coil windows | union of Coil/native spreadsheet windows | user/account × 5 min |
+| Docs | qualifying Coil windows | union of Coil/native document windows | user/account × 5 min |
+| Slack | qualifying Coil sends | Coil + native/non-Coil messages | message |
+| Team Platform | automated-origin JobEvent windows | all nondeleted JobEvent actor-windows | actor × 5 min |
+| Studio | Coil-OAuth native-auth windows | all native-auth account-windows | account × 5 min |
 
-- **access** is the experimental treatment;
-- **usage** is adoption, not productivity;
-- **attention saved** is the operational mechanism;
-- **contribution per SPL** is the business outcome;
-- **quality** is a constraint, not something hidden inside the productivity ratio.
+**Key statement:** Hex measures six within-surface activity shares. It does not measure one company-wide percent of work automated.
 
-### 3. State what can be measured now
+## Panel 2 — Why can these not be added?
 
-| Layer | MVP measure | Status |
+```math
+[D^{SF}]=queries,\quad [D^{Slack}]=messages,\quad
+[D^{Sheets}]=[D^{Docs}]=[D^{TP}]=[D^{Studio}]=surface\text{-}specific\ windows
+```
+
+Adding counts across these denominators would weight surfaces by arbitrary emission frequency. Even the window metrics cover different applications and opportunity sets.
+
+If one compliance summary is needed:
+
+```math
+U_{pt}=\frac{1}{|\mathcal S^0_p|}\sum_{s\in\mathcal S^0_p}
+\frac{A^s_{pt}-\mu^s_0}{\sigma^s_0}
+```
+
+- `mu^s_0`, `sigma^s_0`: pre-treatment mean and standard deviation for surface `s`.
+- `S^0_p`: surfaces declared relevant for the pod before treatment.
+- `U`: average movement in baseline standard deviations.
+
+Call `U` a **multi-surface adoption index**, never “automation percentage.”
+
+## Panel 3 — What is the economic KPI?
+
+```math
+Y_{pt}=R_{pt}-C_{pt}
+```
+
+```math
+F_{pt}=\sum_i a_{ipt}
+\qquad\text{or}\qquad
+F_{pt}=\frac{\sum_iL_{ipt}}{StandardHours_t}
+```
+
+```math
+\boxed{P_{pt}=\frac{Y_{pt}}{F_{pt}}}
+```
+
+| Variable | Meaning | Source |
 |---|---|---|
-| Assignment | rollout cohort/date | Must be frozen at rollout |
-| Usage | cleaned Hex automation/event share | Exists, definition under revision |
-| Mechanism | SPL hours or sampled time per workflow | Partial/new |
-| Economics | contribution output per SPL FTE | Requires pod mapping + finance + staffing join |
-| Guardrails | QC, rework, delivery, SLA, expert outcomes | Existing systems; exact choices TBD |
+| `R_pt` | recognized revenue for pod `p`, period `t` | Finance/project data |
+| `C_pt` | non-SPL variable delivery cost on the same boundary | Finance/project data |
+| `a_ipt` | SPL `i`'s effective allocation share to pod `p` | staffing/pod mapping |
+| `L_ipt` | SPL hours attributed to pod `p` | credible time records |
+| `F_pt` | SPL full-time-equivalent capacity | derived |
+| `P_pt` | contribution dollars supported per SPL FTE | derived |
 
-The current Hex dashboard answers **how much observable activity used the tools**. It does not by itself answer **whether SPLs became more productive**.
+Why the denominator works: an SPL split across pods contributes fractional allocation to each, so one person is not counted as multiple full people.
 
-### 4. Put the headline metric in the center
+Why SPL cost is excluded from `C`: SPL labor is already the productivity input `F`. If the finance numerator subtracts SPL labor, the same input appears in both numerator and denominator.
 
-```math
-P_{pt}=\frac{R_{pt}-C_{pt}}{\mathrm{SPL\ FTE}_{pt}}
-```
-
-`P` is pod contribution supported per full-time-equivalent SPL. The numerator and denominator use the same pod and period. SPL labor is not subtracted in `C`, because it is already the scarce input in the denominator.
-
-Headline causal interpretation:
+## Panel 4 — What is the primary causal formula?
 
 ```math
-\ln(P_{pt})=\alpha_p+\lambda_t+\beta\widehat A_{pt}+\delta'X_{pt}+\varepsilon_{pt}
+\boxed{
+\ln(P_{pt})
+=
+\alpha_p+\lambda_t+\tau Z_{pt}+\delta'X_{pt}+\varepsilon_{pt}}
 ```
 
 ```math
-\text{10pp automation lift}=100\left(e^{0.10\beta}-1\right)\%
+\boxed{RolloutLift=100\left(e^\tau-1\right)\%}
 ```
 
-In words: a 10-percentage-point increase in automation induced by rollout causes an estimated X% change in contribution supported per SPL.
+| Term | Meaning | Why included |
+|---|---|---|
+| `Z_pt` | randomized rollout assignment | creates exogenous treatment variation |
+| `alpha_p` | pod fixed effect | removes persistent pod differences |
+| `lambda_t` | period fixed effect | removes shared time shocks and seasonality |
+| `X_pt` | prespecified pre-treatment/time-varying confounders | improves precision and adjusts valid external changes |
+| `tau` | log-point effect of offered access | primary intent-to-treat estimate |
 
-### 5. Explain what every operator is doing
+Why log `P`: proportional effects are comparable across pod sizes and exact percent lift is `100(e^tau-1)`. Do not log non-positive values; prespecify a levels/two-part alternative.
 
-| Element | Why it is there |
-|---|---|
-| `R - C` | Measures value after non-SPL variable delivery cost, not just top-line volume |
-| `/ SPL FTE` | Converts pod output into leverage of the scarce SPL input |
-| `ln(P)` | Makes differently sized pods comparable in proportional-change terms |
-| `alpha_p` | Removes persistent differences between pods |
-| `lambda_t` | Removes common week shocks and seasonality |
-| `X` | Holds fixed prespecified time-varying confounders, not post-treatment mechanisms |
-| `A-hat` | Uses only variation in automation caused by rollout, reducing selection bias |
+Why assignment, not usage, is primary: high-performing pods can choose to use more. Random assignment is not selected by performance and does not require a false combined Hex rate.
 
-### 6. Show the richer mechanism separately
+## Panel 5 — How do we prove the treatment changed behavior?
+
+Estimate one first stage per surface:
 
 ```math
-A_{pt}=\frac{\sum_w V_{pwt}M_wS_{pwt}}{\sum_w V_{pwt}M_w}
+\boxed{
+A^s_{pt}
+=
+\alpha^s_p+\lambda^s_t+\pi_sZ_{pt}+\theta_s'X_{pt}+\nu^s_{pt}}
 ```
 
-- `V`: number of workflow units;
-- `M`: pre-treatment manual minutes per unit;
-- `S`: share of those baseline minutes displaced.
+`pi_s` is the rollout-induced percentage-point change on surface `s`. Report all prespecified `pi_s` values or name one primary surface before seeing outcomes.
 
-The denominator is all baseline manual minutes for eligible work. The numerator is the subset displaced. It therefore measures the share of eligible human effort automated rather than a raw count of clicks or calls.
+The summary-index first stage is:
 
-This is the ideal second-phase measure. It should not block the rollout study.
+```math
+U_{pt}=\alpha_p+\lambda_t+\pi_UZ_{pt}+\theta'X_{pt}+\nu_{pt}
+```
 
-### 7. End with the proposed decision rule
+`pi_U` is measured in baseline standard deviations, not percentage points.
 
-Scale when randomized access produces:
+## Panel 6 — When is a “10pp automation effect” valid?
 
-1. a credible positive effect on contribution per SPL FTE or a clear reduction in human attention;
-2. no material deterioration in prespecified quality and delivery outcomes;
-3. sufficient adoption and first-stage strength to show the tool changed behavior;
-4. a value estimate that exceeds implementation and operating cost.
+Only after creating a common 0-to-1 automation share, ideally using workflow time:
 
-## Talk track by audience
+```math
+EligibleMinutes_{pt}=\sum_wV_{pwt}M_w
+```
 
-### For economists
+```math
+DisplacedMinutes_{pt}=\sum_wV_{pwt}M_wS_{pwt}
+```
 
-- The primary causal estimate should be intention-to-treat from the rollout.
-- IV/LATE can translate assignment into automation exposure if the first stage is strong.
-- Workflow attention is a mechanism; realized staffing and volume can be post-treatment and should not automatically be controls.
-- Prespecify outcome hierarchy, transformations, quality non-inferiority thresholds, and multiple-testing policy.
+```math
+\boxed{
+A^{time}_{pt}
+=
+\frac{\sum_wV_{pwt}M_wS_{pwt}}
+{\sum_wV_{pwt}M_w}}
+```
 
-### For engineers
+- `V_pwt`: completed occurrences of workflow `w`.
+- `M_w`: frozen pre-treatment manual minutes per occurrence.
+- `S_pwt`: fraction of baseline minutes displaced, from zero to one.
 
-- Freeze immutable assignment and effective-dated person/pod mappings.
-- Publish raw numerator/denominator components, exclusions, grains, and definition versions.
-- Treat event counts as a proxy until workflows and manual-time weights exist.
-- Make every panel row traceable back to telemetry, staffing, finance, and quality sources.
+Every summand is measured in minutes, so the denominator is coherent. This is the first cross-surface measure defensibly described as percent of eligible SPL work automated.
 
-## The ask for the next sync
+For rollout-predicted `A^time`:
 
-Ask the group to agree on four items:
+```math
+\ln(P_{pt})
+=
+\alpha_p+\lambda_t+\beta\widehat A^{time}_{pt}+\delta'X_{pt}+\varepsilon_{pt}
+```
 
-1. the randomized unit and rollout waves;
-2. the canonical SPL-to-pod/project mapping;
-3. the finance numerator and SPL labor denominator;
-4. one primary quality guardrail and its acceptable threshold.
+```math
+\boxed{Lift_{10pp}=100\left(e^{0.10\beta}-1\right)\%}
+```
 
-Everything else can be staged after the experiment begins, provided raw source data and assignment history are retained.
+Do not apply this expression to `U`, since `U` is not a 0-to-1 percentage.
+
+## Panel 7 — What is the operational mechanism?
+
+```math
+\boxed{
+H_{pwt}=\frac{SPLMinutes_{pwt}}{CompletedWorkflowUnits_{pwt}}}
+```
+
+```math
+\ln(H_{pwt})
+=
+\alpha_{pw}+\lambda_t+\tau_HZ_{pt}+\delta'X_{pwt}+\varepsilon_{pwt}
+```
+
+Successful labor-saving automation implies `tau_H < 0`. Rework, exception handling, and quality-review minutes must remain in the numerator so effort is not merely shifted downstream.
+
+## Panel 8 — What assumptions are embedded in the KPI?
+
+Because:
+
+```math
+\ln(P_{pt})=\ln(Y_{pt})-\ln(F_{pt})
+```
+
+the leverage ratio implicitly fixes the output elasticity of SPL labor at one. Show this robustness model:
+
+```math
+\ln(Y_{pt})
+=
+\alpha_p+\lambda_t+\tau Z_{pt}
++\gamma\ln(F_{pt})+\delta'X_{pt}+\varepsilon_{pt}
+```
+
+If `F` changes because of treatment, the ratio is a total operational-leverage outcome, while the production model is output conditional on realized labor. These are different estimands.
+
+## Panel 9 — What prevents false productivity?
+
+For each quality outcome `j`:
+
+```math
+g_j\!\left(E[Q^j_{pt}]\right)
+=
+\alpha^j_p+\lambda^j_t+\tau^j_QZ_{pt}+\delta_j'X_{pt}
+```
+
+Report QC, rework, one-shot acceptance, delivery yield/SLA, and expert/client outcomes separately. Preserve rate numerators and denominators; do not hide them in an unexplained composite.
+
+## The four decisions needed in the next sync
+
+1. Randomization unit, rollout waves, and intervention components.
+2. Effective-dated person → pod → project mapping and SPL allocation source.
+3. Finance numerator: revenue recognition and exactly which variable costs enter `C`.
+4. Primary economic outcome, primary Hex first stage, and quality non-inferiority guardrail.
